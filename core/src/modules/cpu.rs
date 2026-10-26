@@ -1,4 +1,7 @@
 use core::panic;
+use std::process;
+
+use crate::modules::cpu;
 
 const DEFAULT_STATUS: u8 = 0x34;
 const DEFAULT_SP: u8 = 0xFD; 
@@ -37,7 +40,7 @@ impl CPU {
         }
     }
 
-    pub fn setCPU(&mut self, attr:CpuATTR, val: CpuVal) -> () {
+    pub fn setCPU(&mut self, attr:CpuATTR, val: CpuVal) -> () { // In case need to actualize CPU state outside impl
         match attr {
             CpuATTR::RegisterA => {
                 if let CpuVal::U8(v) = val {
@@ -89,7 +92,7 @@ impl CPU {
         }
     }
 
-    pub fn getCPU(&self, attr:CpuATTR) -> CpuVal {
+    pub fn getCPU(&self, attr:CpuATTR) -> CpuVal { // In case need to get CPU state outside impl
         match attr {
             CpuATTR::RegisterA => CpuVal::U8(self.register_a),
             CpuATTR::RegisterX => CpuVal::U8(self.register_x),
@@ -100,7 +103,36 @@ impl CPU {
         }
     }
 
-    pub fn interpret(&self, program: Vec<u8>) {
-        todo!("")
+    pub fn interpret(&mut self, program: Vec<u8>) {
+        loop {
+            let opcode = program[self.cpu_pc as usize];
+            self.cpu_pc += 1;
+
+            match opcode {
+                0xA9 => {
+                    let param = program[self.cpu_pc as usize];
+                    self.cpu_pc += 1;
+                    self.register_a = param;
+
+                    if self.register_a == 0 {
+                        self.cpu_status = self.cpu_status | 0b0000_0010;
+                    } else {
+                        self.cpu_status = self.cpu_status & 0b1111_1101;
+                    }
+
+                    if self.register_a & 0b1000_0000 != 0 {
+                        self.cpu_status = self.cpu_status | 0b1000_0000;
+                    } else {
+                        self.cpu_status = self.cpu_status & 0b0111_1111;
+                    }
+                }
+
+                0x00 => {
+                    return;
+                }
+                
+                _ => todo!()
+            }
+        }
     }
 }
