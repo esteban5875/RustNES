@@ -26,6 +26,7 @@ pub struct CPU {
     cpu_sp    : u8,
     cpu_status: u8,
     cpu_pc    : u16,
+    memory: [u8; 0xFFFF]
 }
 
 impl CPU {
@@ -37,6 +38,7 @@ impl CPU {
             cpu_sp    : DEFAULT_SP, 
             cpu_status: DEFAULT_STATUS,
             cpu_pc    : 0, 
+            memory    : [0; 0xFFFF]
         }
     }
 
@@ -101,6 +103,19 @@ impl CPU {
             CpuATTR::CpuSP     => CpuVal::U8(self.cpu_sp),
             CpuATTR::CpuPc     => CpuVal::U16(self.cpu_pc)
         }
+    }
+
+    fn mem_read(&self, addr: u16) -> u8 {
+        return self.memory[addr as usize];
+    }
+
+    fn mem_write(&mut self, addr: u16, data: u8) -> bool{
+        self.memory[addr as usize] = data;
+        if self.mem_read(addr) == data {
+            return true;
+        }
+
+        return false;
     }
 
     pub fn interpret(&mut self, program: Vec<u8>) {
