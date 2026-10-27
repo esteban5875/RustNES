@@ -1,7 +1,4 @@
 use core::panic;
-use std::process;
-
-use crate::modules::cpu;
 
 const DEFAULT_STATUS: u8 = 0x34;
 const DEFAULT_SP: u8 = 0xFD; 
@@ -105,6 +102,16 @@ impl CPU {
         }
     }
 
+     pub fn reset(&mut self) {
+       self.register_a = 0;
+       self.register_y = 0;
+       self.register_x = 0;
+       self.cpu_status = DEFAULT_STATUS;
+       self.cpu_sp     = DEFAULT_SP;
+
+       self.cpu_pc     = self.mem_read_u16(0xFFFC);
+   }
+
     fn mem_read(&self, addr: u16) -> u8 {
         return self.memory[addr as usize];
     }
@@ -116,6 +123,30 @@ impl CPU {
         }
 
         return false;
+    }
+
+    fn mem_read_u16(&mut self, pos: u16) -> u16 {
+        let lo = self.mem_read(pos) as u16;
+        let hi = self.mem_read(pos + 1) as u16;
+        return (hi << 8) | (lo as u16)
+    }
+
+    fn mem_write_u16(&mut self, pos: u16, data: u16) -> bool {
+        let hi = (data >> 8) as u8;
+        let lo = (data & 0xff) as u8;
+        self.mem_write(pos, lo);
+        self.mem_write(pos + 1, hi);
+
+        if self.mem_read(pos) == lo && self.mem_read(pos + 1) == hi {
+            return true;
+        }
+
+        return false;
+    }
+
+    pub fn load(&mut self, program: Vec<u8>) {
+        self.memory[0x8000 .. (0x8000 + program.len())].copy_from_slice(&program[..]);
+        self.mem_write_u16(0xFFFC, 0x8000);
     }
 
     pub fn interpret(&mut self, program: Vec<u8>) {
