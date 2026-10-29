@@ -18,7 +18,7 @@ pub mod test {
 
         if let cpu_data::CpuVal::U8(cpu_status_val) = cpu_status_cpu_val {
             assert!(cpu_status_val & 0b0000_0010 == 0b00);
-            assert!(cpu_status_val & 0b1000_0000 == 0);
+            assert_eq!(cpu_status_val & 0b1000_0000, 0b1000_0000);
         }
     }
 
