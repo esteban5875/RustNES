@@ -1,4 +1,5 @@
-use crate::modules::cpu_data::*;
+use crate::modules::cpu_data::{self, *};
+use std::{collections::HashMap, ops::Add};
 use core::panic;
 
 pub struct CPU {
@@ -8,11 +9,26 @@ pub struct CPU {
     cpu_sp    : u8,
     cpu_status: u8,
     cpu_pc    : u16,
-    memory: [u8; 0x10000]
+    memory: [u8; 0x10000],
+    opcode_table: HashMap<u8, (AddressingMode, OpCodeFn)>
 }
 
 impl CPU {
     pub fn new() -> CPU {
+        let cpu_map = opcodes! {
+            //LDA
+            0xA9 => (AddressingMode::Immediate, CPU::lda),
+            0xA5 => (AddressingMode::ZeroPage,  CPU::lda),
+            0xB5 => (AddressingMode::ZeroPage_X, CPU::lda),
+            0xAD => (AddressingMode::Absolute, CPU::lda),
+            0xBD => (AddressingMode::Absolute_X, CPU::lda),
+            0xB9 => (AddressingMode::Absolute_Y, CPU::lda),
+            0xA1 => (AddressingMode::Indirect_X, CPU::lda),
+            0xB1 => (AddressingMode::Indirect_Y, CPU::lda)
+        
+            //TAX
+        };
+
         CPU {
             register_a: 0,
             register_x: 0,
@@ -20,7 +36,8 @@ impl CPU {
             cpu_sp    : DEFAULT_SP, 
             cpu_status: DEFAULT_STATUS,
             cpu_pc    : 0, 
-            memory    : [0; 0x10000]
+            memory    : [0; 0x10000],
+            opcode_table: cpu_map,
         }
     }
 
@@ -47,17 +64,15 @@ impl CPU {
 
     pub fn run(&mut self) {
         loop {
-            let opscode: u8 = self.mem_read(self.cpu_pc);
+            let opcode: u8 = self.mem_read(self.cpu_pc);
             self.cpu_pc += 1;
 
-            match opscode {
-                0xA9 => self.lda(&AddressingMode::Immediate),
-                0xA5 => self.lda(&AddressingMode::ZeroPage),
-                0xAD => self.lda(&AddressingMode::Absolute),
-                0x00 => {
-                    return;
-                }
-                _ => todo!("Implement Opcode: 0x{:02X}", opscode),
+            if (opcode == 0x00){
+                break;
+            }
+            
+            if let Some(&(mode, handler)) = self.opcode_table.get(&opcode) {
+                handler(self, &mode);
             }
         }
     }
@@ -258,8 +273,20 @@ impl CPU {
         self.update_zero_and_negative_flags(self.register_a);
     }
 
-    fn tax(&mut self, mode: &AddressingMode) {
-       self.register_x = self.register_a;
-       self.update_zero_and_negative_flags(self.register_x);
-   }
+    fn ldx(&mut self, mode: &AddressingMode) {
+        let addr = self.get_operand_address(mode);
+        let value = self.mem_read(addr);
+
+        self.register_x = value;
+        self.update_zero_and_negative_flags(self.register_x);
+    }
+
+    fn ldy(&mut self, mode: &AddressingMode){
+        let addr = self.get_operand_address(mode);
+        let value = self.mem_read(addr);
+
+        self.register_y = value;
+        self.update_zero_and_negative_flags(self.register_y);
+    }   
+    
 }
