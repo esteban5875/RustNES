@@ -24,9 +24,28 @@ impl CPU {
             0xBD => (AddressingMode::Absolute_X, CPU::lda),
             0xB9 => (AddressingMode::Absolute_Y, CPU::lda),
             0xA1 => (AddressingMode::Indirect_X, CPU::lda),
-            0xB1 => (AddressingMode::Indirect_Y, CPU::lda)
-        
+            0xB1 => (AddressingMode::Indirect_Y, CPU::lda),
+
+            //LDX
+            0xA2 => (AddressingMode::Immediate, CPU::ldx),
+            0xA6 => (AddressingMode::ZeroPage,  CPU::ldx),
+            0xB6 => (AddressingMode::ZeroPage_Y, CPU::ldx),
+            0xAE => (AddressingMode::Absolute,   CPU::ldx),
+            0xBE => (AddressingMode::Absolute_Y, CPU::ldx),
+
+            //LDY
+            0xA0 => (AddressingMode::Immediate, CPU::ldy),
+            0xA4 => (AddressingMode::ZeroPage,  CPU::ldy),
+            0xB4 => (AddressingMode::ZeroPage_X, CPU::ldy),
+            0xAC => (AddressingMode::Absolute, CPU::ldy),
+            0xBC => (AddressingMode::Absolute_X, CPU::ldy),
+
             //TAX
+            0xAA => (AddressingMode::NoneAddressing, CPU::tax),
+
+            //TAY
+            0xA8 => (AddressingMode::NoneAddressing, CPU::tay)
+
         };
 
         CPU {
@@ -288,5 +307,23 @@ impl CPU {
         self.register_y = value;
         self.update_zero_and_negative_flags(self.register_y);
     }   
+
+    fn tax(&mut self, mode: &AddressingMode){
+        if mode != &AddressingMode::NoneAddressing {
+            panic!("TAX only handles an implied addressing mode.");
+        }
+
+        self.register_x = self.register_a;
+        self.update_zero_and_negative_flags(self.register_x);
+    }
+
+    fn tay(&mut self, mode: &AddressingMode){
+        if mode != &AddressingMode::NoneAddressing {
+            panic!("TAX only handles an implied addressing mode.");
+        }
+        
+        self.register_y = self.register_a;
+        self.update_zero_and_negative_flags(self.register_y);
+    }
     
 }

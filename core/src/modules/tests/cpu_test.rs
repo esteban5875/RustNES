@@ -35,9 +35,26 @@ pub mod test {
     }
 
     #[test]
-    #[ignore = "TEST UNDONE: test_5_ops_working_together."]
     fn test_5_ops_working_together() {
-        todo!("test_5_ops_working_together");
+        let mut cpu: CPU = CPU::new();
+        cpu.run_test(vec![0xA9, 0xC0, 0xAA, 0x00]);
+
+        let cpu_register_a_val = cpu.get_cpu(cpu_data::CpuATTR::RegisterA);
+        let cpu_register_x_val = cpu.get_cpu(cpu_data::CpuATTR::RegisterX);
+        let cpu_status_cpu_val     = cpu.get_cpu(cpu_data::CpuATTR::CpuStatus);
+
+        if let cpu_data::CpuVal::U8(val) = cpu_register_a_val {
+            assert_eq!(val, 0xC0);
+        }
+
+        if let cpu_data::CpuVal::U8(val) = cpu_register_x_val {
+            assert_eq!(val, 0xC0);
+        }
+
+        if let cpu_data::CpuVal::U8(val) = cpu_status_cpu_val {
+            assert!(val & 0b0000_0010 == 0b00);
+            assert_eq!(val & 0b1000_0000, 0b1000_0000);
+        }
     } 
 
     #[test]

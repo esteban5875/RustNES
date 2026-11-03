@@ -4,7 +4,7 @@ pub(in crate::modules) const DEFAULT_STATUS: u8 = 0x34;
 
 pub(in crate::modules) const DEFAULT_SP: u8 = 0xFD; 
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[allow(non_camel_case_types)]
 pub(in crate::modules) enum AddressingMode {
    Immediate,
