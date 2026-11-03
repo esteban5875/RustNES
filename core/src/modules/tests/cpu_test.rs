@@ -35,7 +35,7 @@ pub mod test {
     }
 
     #[test]
-    fn test_5_ops_working_together() {
+    fn test_tax() {
         let mut cpu: CPU = CPU::new();
         cpu.run_test(vec![0xA9, 0xC0, 0xAA, 0x00]);
 
@@ -58,14 +58,69 @@ pub mod test {
     } 
 
     #[test]
-    #[ignore = "TEST UNDONE: test_inx_overflow."]
-    fn test_inx_overflow() {
-        todo!("test_inx_overflow");
+    fn test_tax_zero_flag(){
+        let mut cpu: CPU = CPU::new();
+        cpu.run_test(vec![0xA9, 0x00, 0xAA, 0x00]);
+
+        let cpu_register_a_val = cpu.get_cpu(cpu_data::CpuATTR::RegisterA);
+        let cpu_register_x_val = cpu.get_cpu(cpu_data::CpuATTR::RegisterX);
+        let cpu_status_cpu_val     = cpu.get_cpu(cpu_data::CpuATTR::CpuStatus);
+
+        if let cpu_data::CpuVal::U8(val) = cpu_register_a_val {
+            assert_eq!(val, 0x00);
+        }
+
+        if let cpu_data::CpuVal::U8(val) = cpu_register_x_val {
+            assert_eq!(val, 0x00);
+        }
+
+        if let cpu_data::CpuVal::U8(cpu_status_val) = cpu_status_cpu_val {
+            assert!(cpu_status_val & 0b0000_0010 == 0b10);
+        }
     }
-    
+
     #[test]
-    #[ignore = "TEST UNDONE: test_0xaa_tax_move_a_to_x."]
-    fn test_0xaa_tax_move_a_to_x() {
-        todo!("test_0xaa_tax_move_a_to_x");
+    fn text_tay() {
+        let mut cpu: CPU = CPU::new();
+        cpu.run_test(vec![0xA9, 0xC0, 0xA8, 0x00]);
+
+        let cpu_register_a_val = cpu.get_cpu(cpu_data::CpuATTR::RegisterA);
+        let cpu_register_y_val = cpu.get_cpu(cpu_data::CpuATTR::RegisterY);
+        let cpu_status_cpu_val     = cpu.get_cpu(cpu_data::CpuATTR::CpuStatus);
+
+        if let cpu_data::CpuVal::U8(val) = cpu_register_a_val {
+            assert_eq!(val, 0xC0);
+        }
+
+        if let cpu_data::CpuVal::U8(val) = cpu_register_y_val {
+            assert_eq!(val, 0xC0);
+        }
+
+        if let cpu_data::CpuVal::U8(val) = cpu_status_cpu_val {
+            assert!(val & 0b0000_0010 == 0b00);
+            assert_eq!(val & 0b1000_0000, 0b1000_0000);
+        }
+    }
+
+    #[test]
+    fn test_tay_zero_flag(){
+        let mut cpu: CPU = CPU::new();
+        cpu.run_test(vec![0xA9, 0x00, 0xA8, 0x00]);
+
+        let cpu_register_a_val = cpu.get_cpu(cpu_data::CpuATTR::RegisterA);
+        let cpu_register_y_val = cpu.get_cpu(cpu_data::CpuATTR::RegisterY);
+        let cpu_status_cpu_val     = cpu.get_cpu(cpu_data::CpuATTR::CpuStatus);
+
+        if let cpu_data::CpuVal::U8(val) = cpu_register_a_val {
+            assert_eq!(val, 0x00);
+        }
+
+        if let cpu_data::CpuVal::U8(val) = cpu_register_y_val {
+            assert_eq!(val, 0x00);
+        }
+
+        if let cpu_data::CpuVal::U8(cpu_status_val) = cpu_status_cpu_val {
+            assert!(cpu_status_val & 0b0000_0010 == 0b10);
+        }
     }
 }
