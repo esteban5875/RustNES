@@ -1,5 +1,5 @@
-use crate::modules::cpu_data::{self, *};
-use std::{collections::HashMap, ops::Add};
+use crate::modules::cpu_data::*;
+use std::collections::HashMap;
 use core::panic;
 
 pub struct CPU {
@@ -44,8 +44,33 @@ impl CPU {
             0xAA => (AddressingMode::NoneAddressing, CPU::tax),
 
             //TAY
-            0xA8 => (AddressingMode::NoneAddressing, CPU::tay)
+            0xA8 => (AddressingMode::NoneAddressing, CPU::tay),
 
+            //STA
+            0x85 => (AddressingMode::ZeroPage, CPU::sta),
+            0x95 => (AddressingMode::ZeroPage_X, CPU::sta),
+            0x8D => (AddressingMode::Absolute, CPU::sta),
+            0x9D => (AddressingMode::Absolute_X, CPU::sta),
+            0x99 => (AddressingMode::Absolute_Y, CPU::sta),
+            0x81 => (AddressingMode::Indirect_X, CPU::sta),
+            0x91 => (AddressingMode::Indirect_Y, CPU::sta),
+
+            //STX
+            0x86 => (AddressingMode::ZeroPage, CPU::stx),
+            0x96 => (AddressingMode::ZeroPage_Y, CPU::stx),
+            0x8E => (AddressingMode::Absolute, CPU::stx),
+
+            //STY
+            0x84 => (AddressingMode::ZeroPage, CPU::sty),
+            0x94 => (AddressingMode::ZeroPage_X, CPU::sty),
+            0x8C => (AddressingMode::Absolute, CPU::sty),
+
+            //TSX
+            0xBA => (AddressingMode::NoneAddressing, CPU::tsx),
+
+            //TXA
+            
+            //TODO: FINISH OPCODE TABLE.
         };
 
         CPU {
@@ -292,6 +317,11 @@ impl CPU {
         self.update_zero_and_negative_flags(self.register_a);
     }
 
+    fn sta(&mut self, mode: &AddressingMode){
+        let addr = self.get_operand_address(mode);
+        self.mem_write(addr, self.register_a);
+    }
+
     fn ldx(&mut self, mode: &AddressingMode) {
         let addr = self.get_operand_address(mode);
         let value = self.mem_read(addr);
@@ -300,30 +330,51 @@ impl CPU {
         self.update_zero_and_negative_flags(self.register_x);
     }
 
+    fn stx(&mut self, mode: &AddressingMode){
+        let addr = self.get_operand_address(mode);
+        self.mem_write(addr, self.register_x);
+    }
+
     fn ldy(&mut self, mode: &AddressingMode){
         let addr = self.get_operand_address(mode);
         let value = self.mem_read(addr);
 
         self.register_y = value;
         self.update_zero_and_negative_flags(self.register_y);
+    }
+
+    fn sty(&mut self, mode: &AddressingMode){
+        let addr = self.get_operand_address(mode);
+        self.mem_write(addr, self.register_y);
     }   
 
     fn tax(&mut self, mode: &AddressingMode){
-        if mode != &AddressingMode::NoneAddressing {
-            panic!("TAX only handles an implied addressing mode.");
-        }
-
         self.register_x = self.register_a;
         self.update_zero_and_negative_flags(self.register_x);
     }
 
     fn tay(&mut self, mode: &AddressingMode){
-        if mode != &AddressingMode::NoneAddressing {
-            panic!("TAX only handles an implied addressing mode.");
-        }
-        
         self.register_y = self.register_a;
         self.update_zero_and_negative_flags(self.register_y);
+    }
+
+    fn tsx(&mut self, mode: &AddressingMode){
+        self.register_x = self.cpu_sp;
+        self.update_zero_and_negative_flags(self.register_x);
+    }
+
+    fn txa(&mut self, mode: &AddressingMode){
+        self.register_a = self.register_x;
+        self.update_zero_and_negative_flags(self.register_a);
+    }
+
+    fn txs(&mut self, mode: &AddressingMode){
+        self.cpu_sp = self.register_x;
+    }
+
+    fn tya(&mut self, mode: &AddressingMode){
+        self.register_a = self.register_y;
+        self.update_zero_and_negative_flags(self.register_a);
     }
     
 }
