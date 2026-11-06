@@ -1,7 +1,7 @@
 #[cfg(test)]
 pub mod test {
-    use crate::modules::cpu::{CPU};
-    use crate::modules::cpu_data;
+    use crate::emulator::cpu::{CPU};
+    use crate::emulator::cpu_data;
     use super::*;
 
     #[test]

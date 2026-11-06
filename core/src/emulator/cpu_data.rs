@@ -1,12 +1,12 @@
-use crate::modules::cpu::CPU;
+use crate::emulator::cpu::CPU;
 
-pub(in crate::modules) const DEFAULT_STATUS: u8 = 0x34;
+pub(in crate::emulator) const DEFAULT_STATUS: u8 = 0x34;
 
-pub(in crate::modules) const DEFAULT_SP: u8 = 0xFD; 
+pub(in crate::emulator) const DEFAULT_SP: u8 = 0xFD; 
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[allow(non_camel_case_types)]
-pub(in crate::modules) enum AddressingMode {
+pub(in crate::emulator) enum AddressingMode {
    Immediate,
    ZeroPage,
    ZeroPage_X,
@@ -19,7 +19,7 @@ pub(in crate::modules) enum AddressingMode {
    NoneAddressing,
 }
 
-pub(in crate::modules) enum CpuATTR {
+pub(in crate::emulator) enum CpuATTR {
     RegisterA,
     RegisterX,
     RegisterY,
@@ -28,12 +28,12 @@ pub(in crate::modules) enum CpuATTR {
     CpuPc,
 }
 
-pub(in crate::modules) enum CpuVal {
+pub(in crate::emulator) enum CpuVal {
     U8(u8),
     U16(u16)
 }
 
-pub (in crate::modules) type OpCodeFn = fn(&mut CPU, &AddressingMode);
+pub (in crate::emulator) type OpCodeFn = fn(&mut CPU, &AddressingMode);
 
 #[macro_export]
 #[doc(hidden)]
@@ -47,5 +47,5 @@ macro_rules! __internal_opcodes {
     }};
 }
 
-pub(in crate::modules) use __internal_opcodes as opcodes;
+pub(in crate::emulator) use __internal_opcodes as opcodes;
 

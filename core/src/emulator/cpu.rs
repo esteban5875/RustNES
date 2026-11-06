@@ -1,4 +1,4 @@
-use crate::modules::cpu_data::*;
+use crate::emulator::cpu_data::*;
 use std::collections::HashMap;
 use core::panic;
 
@@ -69,8 +69,23 @@ impl CPU {
             0xBA => (AddressingMode::NoneAddressing, CPU::tsx),
 
             //TXA
-            
-            //TODO: FINISH OPCODE TABLE.
+            0x8A => (AddressingMode::NoneAddressing, CPU::txa),
+
+            //TXS
+            0x9A => (AddressingMode::NoneAddressing, CPU::txs),
+
+            //TYA
+            0x98 => (AddressingMode::NoneAddressing, CPU::tya),
+
+            //ADC
+            0x69 => (AddressingMode::Immediate,  CPU::adc),
+            0x65 => (AddressingMode::ZeroPage,   CPU::adc),
+            0x75 => (AddressingMode::ZeroPage_X, CPU::adc),
+            0x6D => (AddressingMode::Absolute,   CPU::adc),
+            0x7D => (AddressingMode::Absolute_X, CPU::adc),
+            0x79 => (AddressingMode::Absolute_Y, CPU::adc),
+            0x61 => (AddressingMode::Indirect_X, CPU::adc),
+            0x71 => (AddressingMode::Indirect_Y, CPU::adc)
         };
 
         CPU {
@@ -122,12 +137,12 @@ impl CPU {
     }
 
     //Test Function. Only Use in Tests
-    pub (in crate::modules) fn run_test(&mut self, program: Vec<u8>) {
+    pub (in crate::emulator) fn run_test(&mut self, program: Vec<u8>) {
         self.load_and_run(program);
     }
 
     //Test Function. Only Use in Tests
-    pub(in crate::modules) fn set_cpu(&mut self, attr:CpuATTR, val: CpuVal) -> () { // In case need to actualize CPU state outside impl
+    pub(in crate::emulator) fn set_cpu(&mut self, attr:CpuATTR, val: CpuVal) -> () { // In case need to actualize CPU state outside impl
         match attr {
             CpuATTR::RegisterA => {
                 if let CpuVal::U8(v) = val {
@@ -180,7 +195,7 @@ impl CPU {
     }
 
     //Test Function. Only Use in Tests
-    pub(in crate::modules) fn get_cpu(&self, attr:CpuATTR) -> CpuVal { // In case need to get CPU state outside impl
+    pub(in crate::emulator) fn get_cpu(&self, attr:CpuATTR) -> CpuVal { // In case need to get CPU state outside impl
         match attr {
             CpuATTR::RegisterA => CpuVal::U8(self.register_a),
             CpuATTR::RegisterX => CpuVal::U8(self.register_x),
@@ -377,4 +392,29 @@ impl CPU {
         self.update_zero_and_negative_flags(self.register_a);
     }
     
+    fn adc(&mut self, mode: &AddressingMode){
+        let addr = self.get_operand_address(mode);
+        let value = self.mem_read(addr);
+        let acc   = self.register_a;
+        let carry = self.cpu_status & 0x01;
+
+        let result = acc as u16 + value as u16 + carry as u16;
+        
+        if result > 0xFF {
+            self.cpu_status |= 0x01;
+        } else {
+            self.cpu_status &= !0x01;
+        }
+
+        let result_u8 = result as u8;
+
+        if ((acc ^ result_u8) & (value ^ result_u8) & 0x80) != 0 {
+            self.cpu_status |= 0x40; 
+        } else {
+            self.cpu_status &= !0x40;
+        }
+
+        self.register_a = result_u8;
+        self.update_zero_and_negative_flags(self.register_a);
+    }
 }
